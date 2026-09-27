@@ -131,8 +131,6 @@ router.post(
       }
     }
 
-    const { message } = req.body;
-
     const { rows } = await db.query(
       `INSERT INTO thank_you_messages (campaign_id, creator_id, message, type)
        VALUES ($1, $2, $3, 'bulk')

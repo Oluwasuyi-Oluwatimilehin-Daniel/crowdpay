@@ -705,7 +705,8 @@ export default function Campaign() {
         setAnalyticsBackersLoading(false);
       })
       .catch((err) => setLoadError(err.message || 'Could not load campaign.'));
-  
+  }, [id, currentLocale, refParam, contributed]);
+
   // Load backer insights when analytics tab is 'backers'
   useEffect(() => {
     if (!id || analyticsTab !== 'backers') {
@@ -720,6 +721,8 @@ export default function Campaign() {
       .finally(() => setAnalyticsBackersLoading(false));
   }, [id, analyticsTab]);
 
+  // Load contributions
+  useEffect(() => {
     api
       .getContributions(id, { limit: showAll ? 100 : 10, offset: 0 })
       .then((data) => {
@@ -730,6 +733,10 @@ export default function Campaign() {
         setContributions([]);
         setTotalContributions(0);
       });
+  }, [id, showAll, contributed]);
+
+  // Load milestones, stretch goals, contract status, tiers, NFT rewards, updates
+  useEffect(() => {
     setMilestonesLoading(true);
     api
       .getMilestones(id, { locale: currentLocale })
@@ -770,7 +777,7 @@ export default function Campaign() {
         })
         .catch(() => setHasPendingWithdrawal(false));
     }
-  }, [id, token, contributed, showAll, currentLocale]);
+  }, [id, token, currentLocale, contributed]);
 
   useEffect(() => {
     if (!id || !user || campaign?.status !== 'disputed') {

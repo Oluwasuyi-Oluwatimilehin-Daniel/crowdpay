@@ -1277,16 +1277,14 @@ test('POST /api/contributions/embed validates success path, expired, revoked, an
   });
 
   const embedTokenJwtService = require('../services/embedTokenJwtService');
-  const validToken = embedTokenJwtService.generateEmbedToken({ sub: 'campaign-1', user_id: 'user-1' });
+  const embedTokenService = require('../services/embedTokenService');
+  const validToken = embedTokenJwtService.signEmbedToken({ campaignId: 'campaign-1' });
 
   // Stub embedTokenService.validateEmbedToken for testing different token states
   const originalValidate = embedTokenService.validateEmbedToken;
   embedTokenService.validateEmbedToken = async (token) => {
     if (token === validToken) {
       return { id: 'token-1', user_id: 'user-1', campaign_id: 'campaign-1' };
-    }
-    if (token === 'revoked-token') {
-      return null;
     }
     return null;
   };
@@ -1306,7 +1304,7 @@ test('POST /api/contributions/embed validates success path, expired, revoked, an
     assert.equal(resTampered.status, 401);
 
     // 3. Revoked token path
-    const revokedJwt = embedTokenJwtService.generateEmbedToken({ sub: 'campaign-1', user_id: 'user-1' });
+    const revokedJwt = embedTokenJwtService.signEmbedToken({ campaignId: 'campaign-1' });
     const resRevoked = await request(app)
       .post('/api/contributions/embed')
       .send({ campaign_id: 'campaign-1', amount: '5.0000000', embed_token: revokedJwt });
