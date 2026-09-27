@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { stellarExpertAccountUrl } from '../config/stellar';
 import VerificationBadge from '../components/VerificationBadge';
@@ -13,6 +14,7 @@ import {
 } from '../lib/onboarding';
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { user, ready, updateUser } = useAuth();
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -78,7 +80,7 @@ export default function Profile() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Display name is required');
+      setError(t('Display name is required'));
       return;
     }
     setSaving(true);
@@ -87,7 +89,7 @@ export default function Profile() {
     try {
       const updatedUser = await api.updateMyProfile({ name: name.trim() });
       if (updateUser) updateUser(updatedUser);
-      setSuccess('Profile updated successfully');
+      setSuccess(t('Profile updated successfully'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.message);
@@ -164,7 +166,7 @@ export default function Profile() {
       if (typeof api.updateContributorPrivacy === 'function') {
         await api.updateContributorPrivacy({ contributor_privacy: newPrivacy });
         setContributorPrivacy(newPrivacy);
-        setSuccess('Privacy preference updated successfully');
+        setSuccess(t('Privacy preference updated successfully'));
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {
@@ -187,7 +189,7 @@ export default function Profile() {
 
       <div className="campaign-card" style={{ marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1rem' }}>
-          Account details
+          {t('Account details')}
         </h2>
 
         {error && (
@@ -204,18 +206,18 @@ export default function Profile() {
         <form onSubmit={handleSave}>
           <div className="form-stack" style={{ marginBottom: '1.25rem' }}>
             <label htmlFor="profile-name" className="label-strong">
-              Display name
+              {t('Display name')}
             </label>
             <input
               id="profile-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your display name"
+              placeholder={t('Your display name')}
             />
           </div>
 
           <div className="form-stack" style={{ marginBottom: '1.25rem' }}>
-            <label className="label-strong">Email address</label>
+            <label className="label-strong">{t('Email address')}</label>
             <input
               value={user.email || ''}
               disabled
@@ -228,7 +230,7 @@ export default function Profile() {
           </div>
 
           <div className="form-stack" style={{ marginBottom: '1.5rem' }}>
-            <label className="label-strong">Member since</label>
+            <label className="label-strong">{t('Member since')}</label>
             <input
               value={user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
               disabled
@@ -245,7 +247,7 @@ export default function Profile() {
             className="btn-primary"
             disabled={saving || !name.trim() || name === user.name}
           >
-            {saving ? 'Saving…' : 'Save changes'}
+            {saving ? t('Saving…') : t('Save changes')}
           </button>
         </form>
       </div>
@@ -265,14 +267,14 @@ export default function Profile() {
             {nftRewards.map((reward) => (
               <div key={reward.id} style={{ background: 'var(--color-surface)', borderRadius: '8px', padding: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  <strong>{reward.reward_tier_title || 'NFT reward'}</strong>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{reward.status || 'configured'}</span>
+                  <strong>{reward.reward_tier_title || t('NFT reward')}</strong>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{reward.status || t('configured')}</span>
                 </div>
                 {reward.serial_number && (
-                  <p style={{ marginTop: '0.35rem', marginBottom: 0, fontSize: '0.9rem' }}>Serial: {reward.serial_number}</p>
+                  <p style={{ marginTop: '0.35rem', marginBottom: 0, fontSize: '0.9rem' }}>{t('Serial')}: {reward.serial_number}</p>
                 )}
                 {reward.campaign_title && (
-                  <p style={{ marginTop: '0.35rem', marginBottom: 0, fontSize: '0.9rem' }}>Campaign: {reward.campaign_title}</p>
+                  <p style={{ marginTop: '0.35rem', marginBottom: 0, fontSize: '0.9rem' }}>{t('Campaign')}: {reward.campaign_title}</p>
                 )}
               </div>
             ))}
@@ -291,16 +293,16 @@ export default function Profile() {
             marginBottom: '0.75rem',
           }}
         >
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>Identity verification</h2>
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>{t('Identity verification')}</h2>
           <VerificationBadge status={kycStatus} tier={verificationTier} showTier />
         </div>
 
         {(kycStatus === 'verified' || kycStatus === 'approved') && (
           <div>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-              Your identity is verified as <strong>{verificationTier}</strong> tier
+              {t('Your identity is verified as')} <strong>{verificationTier}</strong> {t('tier')}
               {user.kyc_completed_at
-                ? ` as of ${new Date(user.kyc_completed_at).toLocaleDateString()}`
+                ? ` ${t('as of')} ${new Date(user.kyc_completed_at).toLocaleDateString()}`
                 : ''}
               .
             </p>
@@ -341,12 +343,12 @@ export default function Profile() {
 
       <div className="campaign-card">
         <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          Your Stellar wallet
+          {t('Your Stellar wallet')}
         </h2>
         <p
           style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}
         >
-          This is a custodial wallet managed by CrowdPay.
+          {t('This is a custodial wallet managed by CrowdPay.')}
         </p>
 
         <div
@@ -364,7 +366,7 @@ export default function Profile() {
 
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button type="button" className="btn-secondary" onClick={handleCopy}>
-            {copied ? 'Copied!' : 'Copy address'}
+            {copied ? t('Copied!') : t('Copy address')}
           </button>
           {typeof stellarExpertAccountUrl === 'function' && (
             <a
@@ -374,7 +376,7 @@ export default function Profile() {
               className="btn-secondary"
               style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
             >
-              View on Stellar Expert ↗
+              {t('View on Stellar Expert ↗')}
             </a>
           )}
         </div>
@@ -383,32 +385,32 @@ export default function Profile() {
       {(user?.role === 'creator' || user?.role === 'admin') && (
         <div className="campaign-card">
           <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-            Security Settings
+            {t('Security Settings')}
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            Protect your account with Two-Factor Authentication (TOTP).
+            {t('Protect your account with Two-Factor Authentication (TOTP).')}
           </p>
 
           {user.totp_enabled ? (
-            <p className="alert alert--success">Two-Factor Authentication is enabled on this account.</p>
+            <p className="alert alert--success">{t('Two-Factor Authentication is enabled on this account.')}</p>
           ) : (
             <>
               {twoFaError && <p className="alert alert--error" style={{ marginBottom: '1rem' }}>{twoFaError}</p>}
               
               {setupStep === 0 && (
                 <button className="btn-primary" onClick={handleStart2FA} disabled={twoFaLoading}>
-                  {twoFaLoading ? 'Setting up...' : 'Setup 2FA'}
+                  {twoFaLoading ? t('Setting up...') : t('Setup 2FA')}
                 </button>
               )}
 
               {setupStep === 1 && (
                 <div style={{ background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px' }}>
-                  <p>1. Scan this QR code with your Authenticator app (like Google Authenticator or Authy):</p>
+                  <p>{t('1. Scan this QR code with your Authenticator app (like Google Authenticator or Authy):')}</p>
                   <img src={qrCodeDataUrl} alt="2FA QR Code" style={{ display: 'block', margin: '1rem 0' }} />
-                  <p>Or enter this secret manually: <strong>{totpSecret}</strong></p>
+                  <p>{t('Or enter this secret manually:')} <strong>{totpSecret}</strong></p>
                   <form onSubmit={handleVerify2FA} style={{ marginTop: '1rem' }}>
                     <div className="form-stack">
-                      <label className="label-strong">2. Enter the 6-digit code from your app</label>
+                      <label className="label-strong">{t('2. Enter the 6-digit code from your app')}</label>
                       <input 
                         type="text" 
                         value={totpCode} 
@@ -418,7 +420,7 @@ export default function Profile() {
                       />
                     </div>
                     <button type="submit" className="btn-primary" disabled={twoFaLoading} style={{ marginTop: '1rem' }}>
-                      {twoFaLoading ? 'Verifying...' : 'Verify and Enable'}
+                      {twoFaLoading ? t('Verifying...') : t('Verify and Enable')}
                     </button>
                   </form>
                 </div>
@@ -426,8 +428,8 @@ export default function Profile() {
 
               {setupStep === 2 && (
                 <div className="alert alert--info">
-                  <h3 style={{ marginTop: 0 }}>2FA Enabled Successfully!</h3>
-                  <p>Please save these backup codes in a secure location. You will not see them again.</p>
+                  <h3 style={{ marginTop: 0 }}>{t('2FA Enabled Successfully!')}</h3>
+                  <p>{t('Please save these backup codes in a secure location. You will not see them again.')}</p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '1rem' }}>
                     {backupCodes.map((code, idx) => (
                       <code key={idx} style={{ background: '#fff', padding: '0.25rem 0.5rem', borderRadius: '4px', textAlign: 'center' }}>{code}</code>
@@ -444,10 +446,10 @@ export default function Profile() {
       {(user?.role === 'creator' || user?.role === 'admin') && (
         <div className="campaign-card" style={{ marginTop: '1.25rem' }}>
           <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-            Creator onboarding checklist
+            {t('Creator onboarding checklist')}
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            Show the setup checklist on your dashboard until you publish your first campaign.
+            {t('Show the setup checklist on your dashboard until you publish your first campaign.')}
           </p>
           {checklistDismissed ? (
             <button
@@ -458,7 +460,7 @@ export default function Profile() {
                 setChecklistDismissed(false);
               }}
             >
-              Re-open checklist on dashboard
+              {t('Re-open checklist on dashboard')}
             </button>
           ) : (
             <button
@@ -469,7 +471,7 @@ export default function Profile() {
                 setChecklistDismissed(true);
               }}
             >
-              Dismiss checklist
+              {t('Dismiss checklist')}
             </button>
           )}
         </div>
@@ -477,10 +479,10 @@ export default function Profile() {
 
       <div className="campaign-card" style={{ marginTop: '1.25rem' }}>
         <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          Account Data Export
+          {t('Account Data Export')}
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-          Request a copy of your personal data and account activity. This may take a few minutes for large accounts.
+          {t('Request a copy of your personal data and account activity. This may take a few minutes for large accounts.')}
         </p>
 
         {exportError && <p className="alert alert--error" style={{ marginBottom: '1rem' }}>{exportError}</p>}
@@ -491,7 +493,7 @@ export default function Profile() {
           disabled={exportLoading || dataExports.some(e => e.status === 'pending')}
           style={{ marginBottom: '1rem' }}
         >
-          {exportLoading ? 'Requesting...' : 'Request Data Export'}
+          {exportLoading ? t('Requesting...') : t('Request Data Export')}
         </button>
 
         {dataExports.length > 0 && (
@@ -499,16 +501,16 @@ export default function Profile() {
             {dataExports.map(exp => (
               <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--color-surface)', padding: '0.75rem', borderRadius: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>Exported {new Date(exp.created_at).toLocaleDateString()}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Status: {exp.status}</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t('Exported')} {new Date(exp.created_at).toLocaleDateString()}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{t('Status')}: {exp.status}</div>
                 </div>
                 {exp.status === 'completed' && new Date(exp.expires_at) > new Date() && (
                   <button className="btn-secondary" onClick={() => handleDownloadExport(exp.id)}>
-                    Download
+                    {t('Download')}
                   </button>
                 )}
                 {exp.status === 'completed' && new Date(exp.expires_at) <= new Date() && (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Expired</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{t('Expired')}</span>
                 )}
               </div>
             ))}
@@ -518,17 +520,17 @@ export default function Profile() {
 
       <div className="campaign-card" style={{ marginTop: '2rem' }}>
         <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          Contributor Privacy Settings
+          {t('Contributor Privacy Settings')}
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-          Control how your contributions appear on public campaign pages and in creator exports.
+          {t('Control how your contributions appear on public campaign pages and in creator exports.')}
         </p>
 
         {privacyError && <p className="alert alert--error" style={{ marginBottom: '1rem' }}>{privacyError}</p>}
 
         <div className="form-stack" style={{ marginBottom: '1.25rem' }}>
           <label htmlFor="contributor-privacy" className="label-strong">
-            Privacy preference
+            {t('Privacy preference')}
           </label>
           <select
             id="contributor-privacy"
@@ -537,21 +539,21 @@ export default function Profile() {
             disabled={privacySaving}
             style={{ maxWidth: '400px' }}
           >
-            <option value="full">Full - Show name, wallet, and amounts</option>
-            <option value="amount_only">Amount only - Hide name and wallet, show amounts</option>
-            <option value="anonymous">Anonymous - Hide name, wallet, and amounts</option>
+            <option value="full">{t('Full - Show name, wallet, and amounts')}</option>
+            <option value="amount_only">{t('Amount only - Hide name and wallet, show amounts')}</option>
+            <option value="anonymous">{t('Anonymous - Hide name, wallet, and amounts')}</option>
           </select>
         </div>
 
         <div style={{ background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-          <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600 }}>How this affects your contributions:</p>
+          <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600 }}>{t('How this affects your contributions:')}</p>
           <ul style={{ margin: '0 0 0 1.5rem', padding: 0 }}>
-            <li style={{ marginBottom: '0.5rem' }}><strong>Full:</strong> Your display name, wallet address, and contribution amounts are visible on campaign pages and in creator exports.</li>
-            <li style={{ marginBottom: '0.5rem' }}><strong>Amount only:</strong> Your contribution amounts are shown, but your name and wallet address are hidden.</li>
-            <li style={{ marginBottom: '0' }}><strong>Anonymous:</strong> Only aggregate campaign totals are affected. Your individual contribution details are hidden from public view and creator exports.</li>
+            <li style={{ marginBottom: '0.5rem' }}><strong>{t('Full:')}</strong> {t('Your display name, wallet address, and contribution amounts are visible on campaign pages and in creator exports.')}</li>
+            <li style={{ marginBottom: '0.5rem' }}><strong>{t('Amount only:')}</strong> {t('Your contribution amounts are shown, but your name and wallet address are hidden.')}</li>
+            <li style={{ marginBottom: '0' }}><strong>{t('Anonymous:')}</strong> {t('Only aggregate campaign totals are affected. Your individual contribution details are hidden from public view and creator exports.')}</li>
           </ul>
           <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.8rem' }}>
-            Note: Campaign creators can still choose to hide all backer amounts regardless of your preference. The more restrictive setting is always applied.
+            {t('Note: Campaign creators can still choose to hide all backer amounts regardless of your preference. The more restrictive setting is always applied.')}
           </p>
         </div>
       </div>
@@ -568,15 +570,15 @@ export default function Profile() {
         >
           <div>
             <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.25rem' }}>
-              Notification Settings
+              {t('Notification Settings')}
             </h2>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-              Control how and when you receive email, push, and in-app notifications.
+              {t('Control how and when you receive email, push, and in-app notifications.')}
             </p>
           </div>
           <Link to="/settings/notifications">
             <button type="button" className="btn-secondary">
-              Manage →
+              {t('Manage →')}
             </button>
           </Link>
         </div>
