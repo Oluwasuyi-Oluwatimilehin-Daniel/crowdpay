@@ -1557,18 +1557,60 @@ router.get('/:id/backers', asyncHandler(async (req, res) => {
 
   const query = `
     SELECT 
-      display_name,
-      sender_public_key,
-      ${show_backer_amounts ? 'amount,' : ''}
-      asset,
-      created_at
-    FROM contributions
-    WHERE campaign_id = $1
-    ORDER BY created_at DESC
+      ctr.display_name,
+      ctr.sender_public_key,
+      COALESCE(u.contributor_privacy, 'full') AS contributor_privacy,
+      ${show_backer_amounts ? 'ctr.amount,' : ''}
+      ctr.asset,
+      ctr.created_at
+    FROM contributions ctr
+    LEFT JOIN users u ON u.wallet_public_key = ctr.sender_public_key
+    WHERE ctr.campaign_id = $1
+    ORDER BY ctr.created_at DESC
     LIMIT $2 OFFSET $3
   `;
   const { rows } = await db.query(query, [campaignId, limit, offset]);
-  res.json({ data: rows, total, limit, offset });
+
+  // Apply contributor privacy settings
+  const filteredRows = rows.map(row => {
+    const privacy = row.contributor_privacy || 'full';
+    const campaignHidesAmounts = !show_backer_amounts;
+
+    // Apply the more restrictive setting
+    if (privacy === 'anonymous' || campaignHidesAmounts) {
+      return {
+        display_name: null,
+        sender_public_key: null,
+        amount: null,
+        asset: row.asset,
+        created_at: row.created_at,
+        contributor_privacy: privacy
+      };
+    }
+
+    if (privacy === 'amount_only') {
+      return {
+        display_name: null,
+        sender_public_key: null,
+        amount: row.amount,
+        asset: row.asset,
+        created_at: row.created_at,
+        contributor_privacy: privacy
+      };
+    }
+
+    // full mode - show everything (subject to campaign-level show_backer_amounts)
+    return {
+      display_name: row.display_name,
+      sender_public_key: row.sender_public_key,
+      amount: row.amount,
+      asset: row.asset,
+      created_at: row.created_at,
+      contributor_privacy: privacy
+    };
+  });
+
+  res.json({ data: filteredRows, total, limit, offset });
 }));
 
 // Download contributor fulfillment data for campaign owners/admins.

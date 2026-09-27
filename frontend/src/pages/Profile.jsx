@@ -34,6 +34,9 @@ export default function Profile() {
   const [dataExports, setDataExports] = useState([]);
   const [exportLoading, setExportLoading] = useState(false);
   const [exportError, setExportError] = useState('');
+  const [contributorPrivacy, setContributorPrivacy] = useState('full');
+  const [privacySaving, setPrivacySaving] = useState(false);
+  const [privacyError, setPrivacyError] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -51,6 +54,12 @@ export default function Profile() {
       api.getDataExports()
         .then(setDataExports)
         .catch(console.error);
+    }
+
+    if (typeof api.getContributorPrivacy === 'function') {
+      api.getContributorPrivacy()
+        .then((data) => setContributorPrivacy(data.contributor_privacy || 'full'))
+        .catch(() => setContributorPrivacy('full'));
     }
   }, [user]);
 
@@ -144,6 +153,24 @@ export default function Profile() {
       window.location.href = res.downloadUrl;
     } catch (err) {
       setExportError(err.message);
+    }
+  };
+
+  const handlePrivacyChange = async (e) => {
+    const newPrivacy = e.target.value;
+    setPrivacySaving(true);
+    setPrivacyError('');
+    try {
+      if (typeof api.updateContributorPrivacy === 'function') {
+        await api.updateContributorPrivacy({ contributor_privacy: newPrivacy });
+        setContributorPrivacy(newPrivacy);
+        setSuccess('Privacy preference updated successfully');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err) {
+      setPrivacyError(err.message);
+    } finally {
+      setPrivacySaving(false);
     }
   };
 
@@ -489,7 +516,47 @@ export default function Profile() {
         )}
       </div>
 
-<div className="campaign-card" style={{ marginTop: '2rem' }}>
+      <div className="campaign-card" style={{ marginTop: '2rem' }}>
+        <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+          Contributor Privacy Settings
+        </h2>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+          Control how your contributions appear on public campaign pages and in creator exports.
+        </p>
+
+        {privacyError && <p className="alert alert--error" style={{ marginBottom: '1rem' }}>{privacyError}</p>}
+
+        <div className="form-stack" style={{ marginBottom: '1.25rem' }}>
+          <label htmlFor="contributor-privacy" className="label-strong">
+            Privacy preference
+          </label>
+          <select
+            id="contributor-privacy"
+            value={contributorPrivacy}
+            onChange={handlePrivacyChange}
+            disabled={privacySaving}
+            style={{ maxWidth: '400px' }}
+          >
+            <option value="full">Full - Show name, wallet, and amounts</option>
+            <option value="amount_only">Amount only - Hide name and wallet, show amounts</option>
+            <option value="anonymous">Anonymous - Hide name, wallet, and amounts</option>
+          </select>
+        </div>
+
+        <div style={{ background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+          <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600 }}>How this affects your contributions:</p>
+          <ul style={{ margin: '0 0 0 1.5rem', padding: 0 }}>
+            <li style={{ marginBottom: '0.5rem' }}><strong>Full:</strong> Your display name, wallet address, and contribution amounts are visible on campaign pages and in creator exports.</li>
+            <li style={{ marginBottom: '0.5rem' }}><strong>Amount only:</strong> Your contribution amounts are shown, but your name and wallet address are hidden.</li>
+            <li style={{ marginBottom: '0' }}><strong>Anonymous:</strong> Only aggregate campaign totals are affected. Your individual contribution details are hidden from public view and creator exports.</li>
+          </ul>
+          <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.8rem' }}>
+            Note: Campaign creators can still choose to hide all backer amounts regardless of your preference. The more restrictive setting is always applied.
+          </p>
+        </div>
+      </div>
+
+      <div className="campaign-card" style={{ marginTop: '2rem' }}>
         <div
           style={{
             display: 'flex',

@@ -50,7 +50,36 @@ function csvRow(values) {
 function buildContributionExportRow(row) {
   const displayName = String(row.display_name || '').trim();
   const publicContributor = displayName.length > 0;
+  const contributorPrivacy = row.contributor_privacy || 'full';
 
+  // Apply contributor privacy settings to export
+  // Anonymous: hide name and wallet, show only aggregate data
+  if (contributorPrivacy === 'anonymous') {
+    return [
+      '', // contributor_name
+      '', // display_name
+      amountForAsset(row, ['USDC', 'USD']),
+      amountForAsset(row, ['XLM']),
+      row.tier || '',
+      formatCsvTimestamp(row.created_at),
+      '', // wallet_address
+    ];
+  }
+
+  // Amount only: hide name and wallet, show amounts
+  if (contributorPrivacy === 'amount_only') {
+    return [
+      '', // contributor_name
+      '', // display_name
+      amountForAsset(row, ['USDC', 'USD']),
+      amountForAsset(row, ['XLM']),
+      row.tier || '',
+      formatCsvTimestamp(row.created_at),
+      '', // wallet_address
+    ];
+  }
+
+  // Full: show everything (existing behavior)
   return [
     publicContributor ? row.contributor_name || '' : '',
     displayName,
@@ -104,6 +133,7 @@ async function streamCampaignContributionExport({
                 WHEN NULLIF(BTRIM(ctr.display_name), '') IS NULL THEN NULL
                 ELSE u.name
               END AS contributor_name,
+              COALESCE(u.contributor_privacy, 'full') AS contributor_privacy,
               rt.title AS tier
          FROM contributions ctr
          LEFT JOIN users u ON u.wallet_public_key = ctr.sender_public_key

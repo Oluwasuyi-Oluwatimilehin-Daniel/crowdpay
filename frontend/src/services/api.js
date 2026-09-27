@@ -348,6 +348,14 @@ export const api = {
     const res = await apiClient.get(`/users/me/exports/${exportId}/download`);
     return res.data;
   },
+  async getContributorPrivacy() {
+    const res = await apiClient.get('/users/me/contributor-privacy');
+    return res.data;
+  },
+  async updateContributorPrivacy(data) {
+    const res = await apiClient.patch('/users/me/contributor-privacy', data);
+    return res.data;
+  },
   async listCampaignPools(campaignId) {
     const res = await apiClient.get(`/campaign-pools/campaign/${campaignId}`);
     return res.data;

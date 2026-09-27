@@ -15,7 +15,7 @@ const asyncHandler = require('../utils/asyncHandler');
 router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const { rows } = await db.query(
     `SELECT id, email, name, wallet_public_key, wallet_type, role, kyc_status, kyc_completed_at, wallet_funded_at, wallet_funding_failed_at, created_at,
-            verification_status, verification_tier, persona_inquiry_id
+            verification_status, verification_tier, persona_inquiry_id, contributor_privacy
      FROM users
      WHERE id = $1`,
     [req.user.userId]
@@ -235,6 +235,27 @@ router.patch('/me/notification-preferences', requireAuth, asyncHandler(async (re
        updated_at = NOW()
      RETURNING campaign_updates, refunds, disputes, milestones, marketing`,
     [req.user.userId, toNull(campaign_updates), toNull(refunds), toNull(disputes), toNull(milestones), toNull(marketing)]
+  );
+  res.json(rows[0]);
+}));
+
+router.get('/me/contributor-privacy', requireAuth, asyncHandler(async (req, res) => {
+  const { rows } = await db.query(
+    'SELECT contributor_privacy FROM users WHERE id = $1',
+    [req.user.userId]
+  );
+  if (!rows.length) return res.status(404).json({ error: 'User not found' });
+  res.json({ contributor_privacy: rows[0].contributor_privacy || 'full' });
+}));
+
+router.patch('/me/contributor-privacy', requireAuth, asyncHandler(async (req, res) => {
+  const { contributor_privacy } = req.body;
+  if (!contributor_privacy || !['full', 'amount_only', 'anonymous'].includes(contributor_privacy)) {
+    return res.status(400).json({ error: 'contributor_privacy must be one of: full, amount_only, anonymous' });
+  }
+  const { rows } = await db.query(
+    'UPDATE users SET contributor_privacy = $1 WHERE id = $2 RETURNING contributor_privacy',
+    [contributor_privacy, req.user.userId]
   );
   res.json(rows[0]);
 }));
