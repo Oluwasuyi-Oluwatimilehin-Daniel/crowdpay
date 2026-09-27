@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+const { describe, it, expect, vi, beforeEach } = require('vitest');
 
 const mockDb = {
   query: vi.fn(),
